@@ -1,0 +1,4 @@
+name: Team2PVP
+version: '1.0-SNAPSHOT'
+main: io.github.willmerkz.team2PVP.Team2PVP
+api-version: '1.21'
