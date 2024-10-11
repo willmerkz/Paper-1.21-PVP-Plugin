@@ -1,11 +1,9 @@
 package io.github.willmerkz.team2PVP.tournament;
 
+import io.github.willmerkz.team2PVP.Team2PVP;
 import io.github.willmerkz.team2PVP.pair.Pair;
 import io.github.willmerkz.team2PVP.tournament.state.GameState;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +17,7 @@ public class Tournament {
     private GameState gameState;
     private final List<@NotNull Player> players;
     private final List<Pair<Player, Player>> pairs;
+    private int currentRound = 0;
 
     public Tournament() {
         instance = this;
@@ -28,6 +27,8 @@ public class Tournament {
         locations = new ArrayList<>();
 
         World world = Bukkit.getWorld("world");
+
+        //define locations in pairs. each pair represents a 1v1 map. new maps can be added by adding new pairs.
 
         locations.add(
                 new Location(
@@ -50,8 +51,72 @@ public class Tournament {
                         0
                 )
         );
-    }
+        // grass
+        locations.add(
+                new Location(
+                        world,
+                        38,
+                        -42,
+                        -12.50,
+                        -45,
+                        0
+                )
+        );
 
+        locations.add(
+                new Location(
+                        world,
+                        48,
+                        -42,
+                        -3,
+                        135,
+                        0
+                )
+        );
+        locations.add(
+                new Location(
+                        world,
+                        16,
+                        -42,
+                        67,
+                        -45,
+                        0
+                )
+        );
+
+        locations.add(
+                new Location(
+                        world,
+                        16,
+                        -42,
+                        49,
+                        135,
+                        0
+                )
+        );
+
+
+        List<List<Location>> pairs = new ArrayList<>();
+
+        for (int i = 0; i < locations.size(); i+=2) {
+            List<Location> pair = new ArrayList<>();
+            pair.add(locations.get(i));
+            pair.add(locations.get(i+1));
+            pairs.add(pair);
+        }
+
+        Collections.shuffle(pairs);
+
+        locations.clear();
+
+        for (List<Location> pair : pairs) {
+            locations.addAll(pair);
+        }
+    }
+//p1: 38 -42 -12 p2: 48 -42 -2
+    // p1: 16 -42 67 p2: 16 -42 49
+    //p1: -16 -41 -12 p2: -0.5 -41 3.5
+    //p1: 92 -42 40 p2: 120 -42 54
     public GameState getGameState() {
         return gameState;
     }
@@ -79,16 +144,21 @@ public class Tournament {
 
         pairs.add(pair);
 
+        Bukkit.broadcastMessage(player.getName() + " has been killed");
+
         if (getLonelyPairs() == pairs.size()) {
             start();
         }
     }
 
     public void start() {
+        System.out.println("Start executed");
         if (pairs.size() == 1) {
             Player winner = getNonNull(pairs.get(0));
+            currentRound = 0;
 
             Bukkit.broadcastMessage("The winner is: " + winner.getName());
+            new Tournament();
             return;
         }
 
@@ -97,7 +167,11 @@ public class Tournament {
             for (Pair<Player, Player> pair : pairs) {
                 players.add(getNonNull(pair));
             }
+
+            Bukkit.broadcastMessage("Round " + currentRound + " winners: " + players.stream().map(Player::getName).toList());
         }
+
+        currentRound++;
 
         pairs.clear();
         setGameState(GameState.PLAYING);
@@ -115,7 +189,19 @@ public class Tournament {
     }
 
     public void startDuel(Player player1, Player player2, int locationId1, int locationId2) {
+        Bukkit.broadcastMessage(player1.getName() + " vs " + player2.getName());
         pairs.add(new Pair<>(player1, player2));
+
+        Location location1 = locations.get(locationId1);
+        Location location2 = locations.get(locationId2);
+
+        System.out.println(player1);
+        System.out.println(player2);
+
+        player1.teleport(location1);
+        Bukkit.getScheduler().runTaskLater(Team2PVP.instance, () -> {
+            player2.teleport(location2);
+        }, 5);
 
         List<String> armorList = List.of(
                 "DIAMOND",
@@ -142,6 +228,9 @@ public class Tournament {
 
         String listResult = armorList.get(randomArmorNumber);
 
+        player1.setGameMode(GameMode.ADVENTURE);
+        player2.setGameMode(GameMode.ADVENTURE);
+
         player1.getInventory().setHelmet(new ItemStack(Material.getMaterial(listResult + "_HELMET")));
         player1.getInventory().setChestplate(new ItemStack(Material.getMaterial(listResult + "_CHESTPLATE")));
         player1.getInventory().setLeggings(new ItemStack(Material.getMaterial(listResult + "_LEGGINGS")));
@@ -154,12 +243,6 @@ public class Tournament {
 
         player1.getInventory().addItem(ItemStack.of(swordList.get(randomSwordNumber)));
         player2.getInventory().addItem(ItemStack.of(swordList.get(randomSwordNumber)));
-
-        Location location1 = locations.get(locationId1);
-        Location location2 = locations.get(locationId2);
-
-        player1.teleport(location1);
-        player2.teleport(location2);
     }
 
     public Player getNonNull(Pair<Player, Player> pair) {
@@ -203,6 +286,10 @@ public class Tournament {
 
     public boolean contains(Player player) {
         return players.contains(player);
+    }
+
+    public List<Player> getPlayers() {
+        return players;
     }
 
 }
