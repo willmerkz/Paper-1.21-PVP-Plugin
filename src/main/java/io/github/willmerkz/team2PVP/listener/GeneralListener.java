@@ -1,5 +1,6 @@
 package io.github.willmerkz.team2PVP.listener;
 
+import io.github.willmerkz.team2PVP.Team2PVP;
 import io.github.willmerkz.team2PVP.tournament.Tournament;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -14,19 +15,22 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 //detect when player joins, so that we can teleport them to the PVP lobby
 public class GeneralListener implements Listener {
+    private final static String locationString = Team2PVP.instance.getConfig().getString("spawn");
+    public final static Location spawn = new Location(
+            Bukkit.getWorld(Team2PVP.instance.getConfig().getString("world")),
+            Double.parseDouble(locationString.split(";")[0]),
+            Double.parseDouble(locationString.split(";")[1]),
+            Double.parseDouble(locationString.split(";")[2]),
+            Float.parseFloat(locationString.split(";")[3]),
+            Float.parseFloat(locationString.split(";")[4])
+    );
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
-        player.teleport(
-                new Location(
-                        Bukkit.getWorld("world"),
-                        119.50,
-                        -41,
-                        -27.50,
-                        90,
-                        0
-                )
+
+        player.teleportAsync(
+                spawn
         );
     }
 //detect when a player dies. instead of providing death screen, we will heal them, set them as the loser, and
@@ -44,25 +48,11 @@ public class GeneralListener implements Listener {
         damager.setHealth(damager.getMaxHealth());
 
         Tournament.instance.killPlayer(player);
-        player.teleport(
-                new Location(
-                        Bukkit.getWorld("world"),
-                        119.50,
-                        -41,
-                        -27.50,
-                        90,
-                        0
-                )
+        player.teleportAsync(
+                spawn
         );
-        damager.teleport(
-                new Location(
-                        Bukkit.getWorld("world"),
-                        119.50,
-                        -41,
-                        -27.50,
-                        90,
-                        0
-                )
+        damager.teleportAsync(
+                spawn
         );
     }
 // set max hunger to avoid having to eat

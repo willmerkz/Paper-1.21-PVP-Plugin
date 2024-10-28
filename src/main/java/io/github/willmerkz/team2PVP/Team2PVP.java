@@ -20,7 +20,11 @@ public final class Team2PVP extends JavaPlugin {
 
         TournamentCommand tournamentCMD = new TournamentCommand(
                 getConfig().getString("tournament-start-permission"),
-                getConfig().getString("tournament-stop-permission")
+                getConfig().getString("tournament-stop-permission"),
+                getConfig().getString("messages.tournament-hasnt-started"),
+                getConfig().getString("messages.already-started"),
+                getConfig().getString("messages.joined"),
+                getConfig().getString("messages.started")
         );
 
         getCommand("tournament").setExecutor(tournamentCMD);

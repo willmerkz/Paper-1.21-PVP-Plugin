@@ -1,2 +1,25 @@
 tournament-start-permission: "tournament.start"
 tournament-stop-permission: "tournament.stop"
+
+prefix: "<rainbow>Tournament >> </rainbow>"
+
+world: "world"
+
+spawn: "119.5;-41;-27.5;90;0"
+
+locations:
+  - "53.5;-41;22;-45;0"
+  - "37.5;-41;6.5;135;0"
+  - "38.5;-42;-12.5;-45;0"
+  - "48;-42;-2.5;135;0"
+
+
+messages:
+  broadcast-kill: "<blue>%player% has been killed</blue>"
+  winner: "<blue>The winner is: %winner%</blue>"
+  rounding: "<blue>Round %round%; winners: %winners%</blue>"
+  vs: "<blue>%first% vs %second%</blue>"
+  tournament-hasnt-started: "The tournament hasn't started yet!"
+  already-started: "The tournament has already started!"
+  joined: "You have successfully joined the tournament!"
+  started: "Tournament has started!"

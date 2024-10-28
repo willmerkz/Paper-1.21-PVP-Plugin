@@ -1,7 +1,9 @@
 package io.github.willmerkz.team2PVP.commands;
 
+import io.github.willmerkz.team2PVP.listener.GeneralListener;
 import io.github.willmerkz.team2PVP.tournament.Tournament;
 import io.github.willmerkz.team2PVP.tournament.state.GameState;
+import io.github.willmerkz.team2PVP.utils.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -15,11 +17,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class TournamentCommand implements CommandExecutor, TabCompleter {
-    private final String startPermission, stopPermission;
+    private final String startPermission, stopPermission, tournamentHasntStarted, alreadyStarted, joined, started;
 
-    public TournamentCommand(String startPermission, String stopPermission) {
+    public TournamentCommand(String startPermission, String stopPermission, String tournamentHasntStarted, String alreadyStarted, String joined, String started) {
         this.startPermission = startPermission;
         this.stopPermission = stopPermission;
+        this.tournamentHasntStarted = tournamentHasntStarted;
+        this.alreadyStarted = alreadyStarted;
+        this.joined = joined;
+        this.started = started;
     }
 
     @Override
@@ -29,19 +35,31 @@ public class TournamentCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             if (args[0].equalsIgnoreCase("join")) {
                 if (Tournament.instance.getGameState() == GameState.DISABLED) {
-                    player.sendMessage("The tournament hasn't started yet!");
+                    player.sendMessage(
+                            ChatUtil.color(
+                                    tournamentHasntStarted
+                            )
+                    );
                     return true;
                 }
 
                 if (Tournament.instance.getGameState() != GameState.WAITING) {
-                    player.sendMessage("The tournament has already started!");
+                    player.sendMessage(
+                            ChatUtil.color(
+                                    alreadyStarted
+                            )
+                    );
                     return true;
                 }
 
                 if (Tournament.instance.contains(player)) return true;
 
                 Tournament.instance.addPlayer(player);
-                player.sendMessage("You have successfully joined the tournament!");
+                player.sendMessage(
+                        ChatUtil.color(
+                                joined
+                        )
+                );
                 return true;
             }
 
@@ -49,15 +67,8 @@ public class TournamentCommand implements CommandExecutor, TabCompleter {
                 if (!player.hasPermission(stopPermission)) return true;
 
                 Tournament.instance.getPlayers().forEach(target -> {
-                    target.teleport(
-                            new Location(
-                                    Bukkit.getWorld("world"),
-                                    119.50,
-                                    -41,
-                                    -27.50,
-                                    90,
-                                    0
-                            )
+                    target.teleportAsync(
+                            GeneralListener.spawn
                     );
                     target.getInventory().clear();
                 });
@@ -75,7 +86,11 @@ public class TournamentCommand implements CommandExecutor, TabCompleter {
                 }
 
                 Tournament.instance.setGameState(GameState.WAITING);
-                player.sendMessage("Tournament has started!");
+                player.sendMessage(
+                        ChatUtil.color(
+                                started
+                        )
+                );
                 return true;
             }
             return true;

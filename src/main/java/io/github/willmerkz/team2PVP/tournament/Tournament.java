@@ -3,9 +3,11 @@ package io.github.willmerkz.team2PVP.tournament;
 import io.github.willmerkz.team2PVP.Team2PVP;
 import io.github.willmerkz.team2PVP.pair.Pair;
 import io.github.willmerkz.team2PVP.tournament.state.GameState;
+import io.github.willmerkz.team2PVP.utils.ChatUtil;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -26,73 +28,15 @@ public class Tournament {
         pairs = new ArrayList<>();
         locations = new ArrayList<>();
 
-        World world = Bukkit.getWorld("world");
+        World world = Bukkit.getWorld(Team2PVP.instance.getConfig().getString("world"));
 
         //define locations in pairs. each pair represents a 1v1 map. new maps can be added by adding new pairs.
+        locations.addAll(
+                Team2PVP.instance.getConfig().getStringList("locations").stream().map(str -> {
+                    String[] split = str.split(";");
 
-        locations.add(
-                new Location(
-                        world,
-                        37.50,
-                        -41,
-                        6.50,
-                        -45,
-                        0
-                )
-        );
-
-        locations.add(
-                new Location(
-                        world,
-                        53.50,
-                        -41,
-                        22.50,
-                        135,
-                        0
-                )
-        );
-        // grass
-        locations.add(
-                new Location(
-                        world,
-                        38,
-                        -42,
-                        -12.50,
-                        -45,
-                        0
-                )
-        );
-
-        locations.add(
-                new Location(
-                        world,
-                        48,
-                        -42,
-                        -3,
-                        135,
-                        0
-                )
-        );
-        locations.add(
-                new Location(
-                        world,
-                        16,
-                        -42,
-                        67,
-                        -45,
-                        0
-                )
-        );
-
-        locations.add(
-                new Location(
-                        world,
-                        16,
-                        -42,
-                        49,
-                        135,
-                        0
-                )
+                    return new Location(world, Double.parseDouble(split[0]), Double.parseDouble(split[1]), Double.parseDouble(split[2]), Float.parseFloat(split[3]), Float.parseFloat(split[4]));
+                }).toList()
         );
 
 
@@ -144,7 +88,12 @@ public class Tournament {
 
         pairs.add(pair);
 
-        Bukkit.broadcastMessage(player.getName() + " has been killed");
+        Bukkit.broadcast(
+                ChatUtil.color(
+                        Team2PVP.instance.getConfig().getString("messages.broadcast-kill")
+                                .replace("%player%", player.getName())
+                )
+        );
 
         if (getLonelyPairs() == pairs.size()) {
             start();
@@ -152,12 +101,16 @@ public class Tournament {
     }
 
     public void start() {
-        System.out.println("Start executed");
         if (pairs.size() == 1) {
             Player winner = getNonNull(pairs.get(0));
             currentRound = 0;
 
-            Bukkit.broadcastMessage("The winner is: " + winner.getName());
+            Bukkit.broadcast(
+                    ChatUtil.color(
+                            Team2PVP.instance.getConfig().getString("messages.winner")
+                                    .replace("%winner%", winner.getName())
+                    )
+            );
             new Tournament();
             return;
         }
@@ -168,7 +121,13 @@ public class Tournament {
                 players.add(getNonNull(pair));
             }
 
-            Bukkit.broadcastMessage("Round " + currentRound + " winners: " + players.stream().map(Player::getName).toList());
+            Bukkit.broadcast(
+                    ChatUtil.color(
+                            Team2PVP.instance.getConfig().getString("messages.rounding")
+                                    .replace("%round%", String.valueOf(currentRound))
+                                    .replace("%winners%", players.stream().map(Player::getName).toList().toString())
+                    )
+            );
         }
 
         currentRound++;
@@ -189,7 +148,13 @@ public class Tournament {
     }
 
     public void startDuel(Player player1, Player player2, int locationId1, int locationId2) {
-        Bukkit.broadcastMessage(player1.getName() + " vs " + player2.getName());
+        Bukkit.broadcast(
+                ChatUtil.color(
+                        Team2PVP.instance.getConfig().getString("messages.vs")
+                                .replace("%first%", player1.getName())
+                                .replace("%second%", player2.getName())
+                )
+        );
         pairs.add(new Pair<>(player1, player2));
 
         Location location1 = locations.get(locationId1);
@@ -198,9 +163,9 @@ public class Tournament {
         System.out.println(player1);
         System.out.println(player2);
 
-        player1.teleport(location1);
+        player1.teleportAsync(location1);
         Bukkit.getScheduler().runTaskLater(Team2PVP.instance, () -> {
-            player2.teleport(location2);
+            player2.teleportAsync(location2);
         }, 5);
 
         List<String> armorList = List.of(
