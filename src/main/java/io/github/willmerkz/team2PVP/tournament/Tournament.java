@@ -18,8 +18,10 @@ public class Tournament {
 
     private GameState gameState;
     private final List<@NotNull Player> players;
-    private final List<Pair<Player, Player>> pairs;
+    private final List<Pair<Player>> pairs;
+    private final List<Player> alivePlayers;
     private int currentRound = 0;
+    private boolean isEveningDuelRunning = false;
 
     public Tournament() {
         instance = this;
@@ -27,6 +29,7 @@ public class Tournament {
         players = new ArrayList<>();
         pairs = new ArrayList<>();
         locations = new ArrayList<>();
+        alivePlayers = new ArrayList<>();
 
         World world = Bukkit.getWorld(Team2PVP.instance.getConfig().getString("world"));
 
@@ -57,10 +60,7 @@ public class Tournament {
             locations.addAll(pair);
         }
     }
-//p1: 38 -42 -12 p2: 48 -42 -2
-    // p1: 16 -42 67 p2: 16 -42 49
-    //p1: -16 -41 -12 p2: -0.5 -41 3.5
-    //p1: 92 -42 40 p2: 120 -42 54
+
     public GameState getGameState() {
         return gameState;
     }
@@ -71,6 +71,7 @@ public class Tournament {
 
     public void addPlayer(Player player) {
         this.players.add(player);
+        this.alivePlayers.add(player);
     }
 
     public void removePlayer(Player player) {
@@ -78,7 +79,8 @@ public class Tournament {
     }
 
     public void killPlayer(Player player) {
-        Pair<Player, Player> pair = getPair(player);
+        alivePlayers.remove(player);
+        Pair<Player> pair = getPair(player);
 
         if (pair == null) return;
 
@@ -87,7 +89,7 @@ public class Tournament {
         pair = removeFromPair(pair, player);
 
         pairs.add(pair);
-
+// announce player death
         Bukkit.broadcast(
                 ChatUtil.color(
                         Team2PVP.instance.getConfig().getString("messages.broadcast-kill")
@@ -95,14 +97,19 @@ public class Tournament {
                 )
         );
 
-        if (getLonelyPairs() == pairs.size()) {
+        if (isEveningDuelRunning || getLonelyPairs() == pairs.size()) {
+            isEveningDuelRunning = false;
             start();
         }
     }
 
     public void start() {
-        if (pairs.size() == 1) {
-            Player winner = getNonNull(pairs.get(0));
+        if (alivePlayers.isEmpty()) {
+            Bukkit.getServer().shutdown();
+            return;
+        }
+        if (alivePlayers.size() == 1) {
+            Player winner = alivePlayers.getFirst();
             currentRound = 0;
 
             Bukkit.broadcast(
@@ -117,8 +124,8 @@ public class Tournament {
 
         if (!pairs.isEmpty()) {
             players.clear();
-            for (Pair<Player, Player> pair : pairs) {
-                players.add(getNonNull(pair));
+            for (Pair<Player> pair : pairs) {
+                players.add(pair.getFirstNotNull());
             }
 
             Bukkit.broadcast(
@@ -134,19 +141,19 @@ public class Tournament {
 
         pairs.clear();
         setGameState(GameState.PLAYING);
-
-        if (players.size() % 2 != 0) {
-            removePlayer(players.get(players.size() - 1));
+        if (alivePlayers.size() > 1 && alivePlayers.size() % 2 != 0) {
+            handleEveningDuel();
+            return;
         }
 
-        for (int i = 0; i < players.size(); i+=2) {
-            Player player1 = players.get(i);
-            Player player2 = players.get(i+1);
+        for (int i = 0; i < alivePlayers.size(); i+=2) {
+            Player player1 = alivePlayers.get(i);
+            Player player2 = alivePlayers.get(i+1);
 
             startDuel(player1, player2, i, i+1);
         }
     }
-
+// matches
     public void startDuel(Player player1, Player player2, int locationId1, int locationId2) {
         Bukkit.broadcast(
                 ChatUtil.color(
@@ -156,18 +163,15 @@ public class Tournament {
                 )
         );
         pairs.add(new Pair<>(player1, player2));
-
+// teleport locations
         Location location1 = locations.get(locationId1);
         Location location2 = locations.get(locationId2);
 
-        System.out.println(player1);
-        System.out.println(player2);
-
-        player1.teleportAsync(location1);
         Bukkit.getScheduler().runTaskLater(Team2PVP.instance, () -> {
+            player1.teleportAsync(location1);
             player2.teleportAsync(location2);
         }, 5);
-
+// types of armors listed
         List<String> armorList = List.of(
                 "DIAMOND",
                 "NETHERITE",
@@ -182,7 +186,7 @@ public class Tournament {
                 Material.NETHERITE_SWORD,
                 Material.IRON_SWORD
         );
-
+// clear inventory
         player1.getInventory().clear();
         player2.getInventory().clear();
 
@@ -193,9 +197,13 @@ public class Tournament {
 
         String listResult = armorList.get(randomArmorNumber);
 
+        // the goal with adventure mode is to prevent griefing, if these systems are already provided by the server
+        // the following 2 lines can be omitted.
         player1.setGameMode(GameMode.ADVENTURE);
         player2.setGameMode(GameMode.ADVENTURE);
 
+        // setting the random gear by fetching list result for each player. we do not change them a second time so that
+        // matchups are even.
         player1.getInventory().setHelmet(new ItemStack(Material.getMaterial(listResult + "_HELMET")));
         player1.getInventory().setChestplate(new ItemStack(Material.getMaterial(listResult + "_CHESTPLATE")));
         player1.getInventory().setLeggings(new ItemStack(Material.getMaterial(listResult + "_LEGGINGS")));
@@ -206,28 +214,21 @@ public class Tournament {
         player2.getInventory().setLeggings(new ItemStack(Material.getMaterial(listResult + "_LEGGINGS")));
         player2.getInventory().setBoots(new ItemStack(Material.getMaterial(listResult + "_BOOTS")));
 
+        //similar logic to armor, except for the players sword
         player1.getInventory().addItem(ItemStack.of(swordList.get(randomSwordNumber)));
         player2.getInventory().addItem(ItemStack.of(swordList.get(randomSwordNumber)));
     }
 
-    public Player getNonNull(Pair<Player, Player> pair) {
-        if (pair.getFirst() != null) {
-            return pair.getFirst();
-        }
-
-        return pair.getSecond();
-    }
-
     public int getLonelyPairs() {
         int count = 0;
-        for (Pair<Player, Player> pair : pairs) {
+        for (Pair<Player> pair : pairs) {
             if (pair.getFirst() == null || pair.getSecond() == null) count++;
         }
         return count;
     }
 
-    public Pair<Player, Player> getPair(Player player) {
-        for (Pair<Player, Player> pair : pairs) {
+    public Pair<Player> getPair(Player player) {
+        for (Pair<Player> pair : pairs) {
             if (pair.getFirst().equals(player) || pair.getSecond().equals(player)) {
                 return pair;
             }
@@ -235,7 +236,7 @@ public class Tournament {
         return null;
     }
 
-    public Pair<Player, Player> removeFromPair(Pair<Player, Player> pair, Player player) {
+    public Pair<Player> removeFromPair(Pair<Player> pair, Player player) {
         if (pair == null) return null;
 
         if (pair.getFirst().equals(player)) {
@@ -248,9 +249,23 @@ public class Tournament {
 
         return pair;
     }
+// duel when odd number of players
+    private void handleEveningDuel() {
+        Player first = alivePlayers.getFirst();
+        Player second = alivePlayers.get(1);
+
+        Bukkit.broadcast(
+                ChatUtil.color(
+                        Team2PVP.instance.getConfig().getString("messages.broadcast-even-duel")
+                )
+        );
+
+        isEveningDuelRunning = true;
+        startDuel(first, second, 0, 1);
+    }
 
     public boolean contains(Player player) {
-        return players.contains(player);
+        return alivePlayers.contains(player);
     }
 
     public List<Player> getPlayers() {

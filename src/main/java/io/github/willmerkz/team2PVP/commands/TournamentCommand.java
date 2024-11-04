@@ -18,7 +18,7 @@ import java.util.List;
 
 public class TournamentCommand implements CommandExecutor, TabCompleter {
     private final String startPermission, stopPermission, tournamentHasntStarted, alreadyStarted, joined, started;
-
+// tournament permissions
     public TournamentCommand(String startPermission, String stopPermission, String tournamentHasntStarted, String alreadyStarted, String joined, String started) {
         this.startPermission = startPermission;
         this.stopPermission = stopPermission;

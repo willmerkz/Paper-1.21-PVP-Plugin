@@ -1,11 +1,12 @@
 package io.github.willmerkz.team2PVP.pair;
 
-public class Pair<T, V> {
+// pair logic
+public class Pair<T> {
 
     private T first;
-    private V second;
+    private T second;
 
-    public Pair(T first, V second) {
+    public Pair(T first, T second) {
         this.first = first;
         this.second = second;
     }
@@ -14,7 +15,7 @@ public class Pair<T, V> {
         return first;
     }
 
-    public V getSecond() {
+    public T getSecond() {
         return second;
     }
 
@@ -22,8 +23,16 @@ public class Pair<T, V> {
         this.first = first;
     }
 
-    public void setSecond(V second) {
+    public void setSecond(T second) {
         this.second = second;
+    }
+
+    public int size() {
+        return (first == null ? 0 : 1) + (second == null ? 0 : 1);
+    }
+
+    public T getFirstNotNull() {
+        return first == null ? second : first;
     }
 
 }

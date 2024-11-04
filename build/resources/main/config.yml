@@ -1,19 +1,22 @@
 tournament-start-permission: "tournament.start"
 tournament-stop-permission: "tournament.stop"
 
+# set prefix for the tournament in chat
 prefix: "<rainbow>Tournament >> </rainbow>"
 
 world: "world"
 
+# set the spawn that players return to in-between rounds
 spawn: "119.5;-41;-27.5;90;0"
 
+# set player teleport points for each map here
 locations:
   - "53.5;-41;22;-45;0"
   - "37.5;-41;6.5;135;0"
   - "38.5;-42;-12.5;-45;0"
   - "48;-42;-2.5;135;0"
 
-
+# operator can define specific chat messages here
 messages:
   broadcast-kill: "<blue>%player% has been killed</blue>"
   winner: "<blue>The winner is: %winner%</blue>"
@@ -23,3 +26,4 @@ messages:
   already-started: "The tournament has already started!"
   joined: "You have successfully joined the tournament!"
   started: "Tournament has started!"
+  broadcast-even-duel: "A even-duel has started, please wait."
