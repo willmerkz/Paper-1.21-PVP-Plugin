@@ -9,12 +9,26 @@ world: "world"
 # set the spawn that players return to in-between rounds
 spawn: "119.5;-41;-27.5;90;0"
 
-# set player teleport points for each map here
+# set player teleport points for each map here (x,y,z, facing, 0)
 locations:
-  - "53.5;-41;22;-45;0"
-  - "37.5;-41;6.5;135;0"
-  - "38.5;-42;-12.5;-45;0"
-  - "48;-42;-2.5;135;0"
+  - "78.4;-29;56.5;47;0" #red/blue map
+  - "58.5;-29;76;-128;0" #red/blue map
+  - "42;-29;72;135;0" #plains
+  - "26.4;-29;56;-46;0" #plains
+  - "13.5;-31;67.5;139;0" #end
+  - "3;-31;57.5;-50;0" #end
+  - "5;-28;24.5;-41.5;0" #volcano
+  - "21.5;-28;40;-138;0" #volcano
+  - "25;-15;-28;-23.4;0" #island
+  - "32.8;-15;-13.5;156;0" #island
+  - "80;-32;17.5;-177.5;0" #pyramid
+  - "80;-32;17;-1;0" #pyramid
+  - "59;-50;7;-145;0" #ice
+  - "84.5;-50;-19.5;44,6;0" #ice
+  - "116;-17;48;-90.5;0" #city
+  - "154.5;-17;48.5;91;0" #city
+  - "110.5;3;-9;180;0" #planet
+  - "110;3;-59;5;0" #planet
 
 # operator can define specific chat messages here
 messages:
