@@ -1,5 +1,6 @@
 tournament-start-permission: "tournament.start"
 tournament-stop-permission: "tournament.stop"
+tournament-join-permission: "tournament.join"
 
 # set prefix for the tournament in chat
 prefix: "<rainbow>Tournament >> </rainbow>"
@@ -41,3 +42,5 @@ messages:
   joined: "You have successfully joined the tournament!"
   started: "Tournament has started!"
   broadcast-even-duel: "Holding a match to even out players."
+  notInGame: "<red>you're not in a tournament"
+  cantStart: "<red>You can't start a tournament with less than 2 players"

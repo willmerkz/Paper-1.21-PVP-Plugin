@@ -2,6 +2,7 @@ package io.github.willmerkz.team2PVP.listener;
 
 import io.github.willmerkz.team2PVP.Team2PVP;
 import io.github.willmerkz.team2PVP.tournament.Tournament;
+import io.github.willmerkz.team2PVP.tournament.state.GameState;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -11,8 +12,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+
 //detect when player joins, so that we can teleport them to the PVP lobby
 public class GeneralListener implements Listener {
     private final static String locationString = Team2PVP.instance.getConfig().getString("spawn");
@@ -33,7 +37,24 @@ public class GeneralListener implements Listener {
                 spawn
         );
     }
-//detect when a player dies. instead of providing death screen, we will heal them, set them as the loser, and
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent e) {
+        Player player = e.getPlayer();
+
+        if (!Tournament.instance.contains(player)) return;
+
+        player.setHealth(player.getMaxHealth());
+        Player damager = Tournament.instance.getOpponent(player);
+        damager.setHealth(damager.getMaxHealth());
+
+        Tournament.instance.killPlayer(player);
+        damager.teleportAsync(
+                spawn
+        );
+    }
+
+    //detect when a player dies. instead of providing death screen, we will heal them, set them as the loser, and
     // return them to the lobby
     @EventHandler
     public void onPlayerDeath(EntityDamageByEntityEvent e) {
@@ -55,12 +76,14 @@ public class GeneralListener implements Listener {
                 spawn
         );
     }
-// set max hunger to avoid having to eat
+
+    // set max hunger to avoid having to eat
     @EventHandler
     public void onFoodLevelChange(FoodLevelChangeEvent e) {
         e.setCancelled(true);
     }
-// detect sign click as an alternative to join the tournament, instead of using a chat command
+
+    // detect sign click as an alternative to join the tournament, instead of using a chat command
     @EventHandler
     public void onSignClick(PlayerInteractEvent e) {
         if (e.getClickedBlock() == null) return;
@@ -72,6 +95,15 @@ public class GeneralListener implements Listener {
         e.setCancelled(true);
 
         e.getPlayer().performCommand("tournament join");
+    }
+
+    @EventHandler
+    public void onCommand(PlayerCommandPreprocessEvent e) {
+        Player player = e.getPlayer();
+
+        if (!player.hasPermission("tournament.admin") && Tournament.instance.getGameState() == GameState.PLAYING) {
+            e.setCancelled(true);
+        }
     }
 
 }

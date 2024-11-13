@@ -68,13 +68,14 @@ public class Tournament {
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
     }
-
+// add players
     public void addPlayer(Player player) {
         this.players.add(player);
         this.alivePlayers.add(player);
     }
-
+//remove player from map
     public void removePlayer(Player player) {
+        this.alivePlayers.remove(player);
         this.players.remove(player);
     }
 
@@ -138,7 +139,7 @@ public class Tournament {
         }
 
         currentRound++;
-
+// logic for odd number of players. hold an evening duel
         pairs.clear();
         setGameState(GameState.PLAYING);
         if (alivePlayers.size() > 1 && alivePlayers.size() % 2 != 0) {
@@ -153,7 +154,7 @@ public class Tournament {
             startDuel(player1, player2, i, i+1);
         }
     }
-// matches
+// matches and output
     public void startDuel(Player player1, Player player2, int locationId1, int locationId2) {
         Bukkit.broadcast(
                 ChatUtil.color(
@@ -270,6 +271,16 @@ public class Tournament {
 
     public List<Player> getPlayers() {
         return players;
+    }
+
+    public Player getOpponent(Player player) {
+        Pair<Player> pair = getPair(player);
+
+        if (pair == null) return null;
+
+        if (pair.getFirst() == player) return pair.getSecond();
+
+        return pair.getFirst();
     }
 
 }
